@@ -1,6 +1,7 @@
 const User = require('../models/User');
 const { errorResponse } = require('../utils/errorResponse');
 
+//update authenticated
 const updateUserProfileService = async (userId, updates, file) => {
     const user = await User.findById(userId);
     if (!user) {
@@ -14,6 +15,8 @@ const updateUserProfileService = async (userId, updates, file) => {
     return updatedUser;
 };
 
-module.exports = { updateUserProfileService };
+module.exports = { 
+    updateUserProfileService,
+};
 
 

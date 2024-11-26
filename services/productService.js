@@ -22,6 +22,7 @@ const getAllProducts = async (userId) => {
 
 // Getting a single product by ID for a specific user
 const getProductById = async (id, userId) => {
+    
     try {
         const product = await Product.findOne({ _id:id, user: userId });
         if (!product) {

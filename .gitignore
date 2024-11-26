@@ -20,5 +20,5 @@ rad.json
 *.flf
 #Test results file
 TestResults.xml
-#node modules file
-ode_modules
+#node modules  files
+node_modules

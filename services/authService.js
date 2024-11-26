@@ -2,14 +2,13 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
-const registerUserService = async ({ username, email, password }) => {
+const registerUserService = async ({ username, email, password,confirmPassword}) => {
     try {
         const existingUser = await User.findOne({ email });
         if (existingUser) {
             throw new Error('Email already in use');
         }
-        const hashedPassword = bcrypt.hashSync(password, 10);
-        const user = new User({ username, email, password: hashedPassword });
+        const user = new User({ username, email, password,confirmPassword});
         await user.save();
 
         // Create JWT token

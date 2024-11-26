@@ -1,6 +1,7 @@
-const { updateUserProfileService } = require('../services/userService');
+const { updateUserProfileService} = require('../services/userService');
 const { errorResponse } = require('../utils/errorResponse');
 
+// update user details
 const updateUserProfile = async (req, res, next) => {
     try {
         const userId = req.user.userId;
@@ -13,4 +14,6 @@ const updateUserProfile = async (req, res, next) => {
     }
 };
 
-module.exports = { updateUserProfile };
+module.exports = { 
+    updateUserProfile,
+};
