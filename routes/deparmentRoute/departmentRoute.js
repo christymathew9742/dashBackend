@@ -1,6 +1,6 @@
 const express = require('express');
-const {createDepartmentData,} = require('../../controllers/department/departmentController');
-const {validatedepartment, Validation} = require('../../middlewares/departmentMiddleware/departmentMiddleware')
+const {createDepartmentData} = require('../../controllers/departmentController/drDepartment');
+const {validatedepartment, Validation} = require('../../middlewares/departmentMiddleware/drMiddleware')
 const authMiddleware = require('../../middlewares/authMiddleware');
 const router = express.Router();
 

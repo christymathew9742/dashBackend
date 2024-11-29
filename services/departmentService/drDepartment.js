@@ -1,4 +1,4 @@
-const {DepartmentModal} = require('../../models/departmentModel/departmentModel');
+const {DepartmentModal} = require('../../models/drAppointment/drModel');
 const { errorResponse } = require('../../utils/errorResponse');
 
 // Creating a new DepartmentModal

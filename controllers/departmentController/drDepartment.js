@@ -1,5 +1,5 @@
 const { errorResponse } = require('../../utils/errorResponse');
-const {createDepartmentResponse} = require('../../services/departmentService/departmentService')
+const {createDepartmentResponse} = require('../../services/departmentService/drDepartment')
 
 // Create createDepartmentData
 const createDepartmentData = async (req, res, next) => {
@@ -20,5 +20,5 @@ const createDepartmentData = async (req, res, next) => {
 };
 
 module.exports = {
-    createDepartmentData,
+    createDepartmentData, 
 };
