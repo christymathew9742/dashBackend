@@ -1,69 +1,24 @@
 const axios = require('axios');
 const fs = require("fs");
 const path = require('path');
-const { Readable } = require("stream");
+const { Client } = require('whatsapp-web.js');
+const VerifyToken = require('../../models/VerifyToken');
+const vision = require('@google-cloud/vision');
 const { whatsappPhoneId, apiToken, webToken , baseUrl} = require('../../config/whatsappConfig');
 const handleConversation = require('../../services/whatsappService/whatsappService'); 
 const {processAudioWithAzureSTT, playTextToSpeech}  = require('../../ai/voiceAssistant/voiceAssistant');
 
-const voicePath = path.resolve(__dirname, '../.././output.wav');
-const voiceStream = fs.createReadStream(voicePath);
+// const voicePath = path.resolve(__dirname, '../.././output.wav');
+// const voiceStream = fs.createReadStream(voicePath);
 
-console.log(voicePath,'hhhhhhhhhhhhhhhhhhhhhhhhhhh')
-audioUrl='https://lookaside.fbsbx.com/whatsapp_business/attachments/?mid=3792101994337493&ext=1732888380&hash=ATvjsqSRVI3HQL5NS5_rzSKqEEp7JbleK9v2DCSvFKgbuA';
-
-
-
-
-const processAudioFromUrl = async (url, token,voiceStream) => {
-    try {
-        // Fetch the audio file as a stream from the URL with the access token
-        const response = await axios({
-            method: 'get',
-            url: url,
-            headers: {
-                'Authorization': `Bearer ${token}`  // Pass the token in the Authorization header
-            },
-            responseType: 'stream', // Get the response as a stream
-        });
-
-        const filePath = path.join(__dirname, 'downloaded_audio.wav');  // Specify the file path
-        const writer = fs.createWriteStream(filePath);
-
-        response.data.pipe(writer);
-
-        writer.on('finish', () => {
-            console.log('Audio file downloaded successfully!');
-        });
-
-        writer.on('error', (err) => {
-            console.error('Error saving audio file:', err);
-        });
-
-
-       // const  data = fs.createReadStream(response.data);
-        // Pass the audio stream to your STT function
-       // processAudioWithAzureSTT(response.data); // response.data is the audio stream
-
-    } catch (error) {
-        console.log('error')
-        //console.error('Error downloading or processing audio:', error);
-    }
-};
-
-processAudioFromUrl(audioUrl, apiToken,voiceStream);
-
-
-
-
-const verifyWebhook = (req, res) => {
+const verifyWebhook = async (req, res) => {
     const challenge = req.query['hub.challenge'];
-    const VERIFY_TOKEN = webToken;
-    const token = req.query['hub.verify_token'];
-    if (token === VERIFY_TOKEN) {
+    const webHooktoken = req.query['hub.verify_token'];
+    const isRecord = await VerifyToken.findOne({ verifyToken: webHooktoken });
+    if (isRecord) {
         res.status(200).send(challenge);
     } else {
-        res.status(403).send('Error, invalid token');
+        res.status(403).send('Error, Please Verify Webhooks Token and URL');
     }
 };
 
@@ -75,26 +30,31 @@ const handleIncomingMessage = async (req, res) => {
 
         const whatsapData = message?.messages?.[0];
         const { from: userPhone, type } = whatsapData;
-        let { userData , aiResponce, audioMessage } = {};
-
+        let { userData , aiResponce, audioMessage, imagedata } = {};
+        console.log(whatsapData,'whatsapData')
         switch (type) {
             case 'text':
                 userData = {
                     userPhone,
                     userInput:whatsapData?.text?.body,
                 }
-                aiResponce = await handleConversation(userData || null);
+                //aiResponce = await handleConversation(userData || null);
                 break;
             case 'audio':
                 userData = whatsapData?.audio?.id;
                 audioMessage = await processAudioMessage(userData || null)
-                aiResponce = audioMessage
+               // aiResponce = audioMessage
+                break;
+            case 'image':
+                userData = whatsapData?.image?.id;
+                imagedata = await getImageUrl(userData);
+               // aiResponce = await handleConversation(imagedata || null);
                 break;
             default:
                 return res.status(400).send('Unsupported message type.');
         }
 
-        await sendMessageToWhatsApp(userPhone, aiResponce);
+       // await sendMessageToWhatsApp(userPhone, aiResponce);
         res.status(200).send('Message received');
     } catch (error) {
         console.error('Error:', error.message);
@@ -120,7 +80,6 @@ const sendMessageToWhatsApp = async (phoneNumber, message) => {
             },
         };
         const response = await axios.post(`${baseUrl}/${whatsappPhoneId}/messages`,data, config);
-
     } catch (error) {
         console.error('Error sending WhatsApp message:', error);
     }
@@ -134,10 +93,15 @@ const getMediaData = async (audiId) => {
             headers: {
                 Authorization: `Bearer ${apiToken}`,
             },
-            //responseType: 'stream',
+            responseType: 'stream',
         });
 
-        console.log( response?.data.url)
+        const filePath = './outputnew.ogg'; 
+        response?.data.pipe(fs.createWriteStream(filePath));
+        console.log('File downloaded successfully!');
+
+        console.log(response?.data.url)
+
         return response?.data;
        
     } catch (error) {
@@ -164,6 +128,24 @@ const processAudioMessage = async (audiId) => {
 
     } catch (error) {
         console.error('Error processing audio message:', error.message);
+    }
+};
+
+// Function to get the image URL from WhatsApp Media ID
+const getImageUrl = async (mediaId) => {
+    try {
+        const url = `${baseUrl}/${mediaId}`;
+        const response = await axios.get(url, {
+            headers: {
+                Authorization: `Bearer ${apiToken}`,
+            },
+            responseType: 'arraybuffer'
+        });
+        console.log(response.data,'img url')
+        return response.data.url;
+    } catch (error) {
+        console.error('Error fetching image URL:', error.message);
+        throw new Error('Failed to fetch image URL');
     }
 };
 

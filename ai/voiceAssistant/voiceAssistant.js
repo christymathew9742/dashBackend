@@ -14,7 +14,6 @@ const processAudioWithAzureSTT =  (audioStream)  => {
 
      const recognizer = new SpeechSDK.SpeechRecognizer(speechConfig, audioConfig);
      recognizer.recognizeOnceAsync((result) => {
-        console.log(result,'rrrrrr')
          if (result.reason === SpeechSDK.ResultReason.RecognizedSpeech) {
              console.log("Recognized Speech hhhhhh:", result.text);
          } else {

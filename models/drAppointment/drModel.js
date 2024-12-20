@@ -17,11 +17,14 @@ const DepartmentSchema = new mongoose.Schema({
     doctor: { type: String, required: true },
     department: { type: String, required: true },
     date: { type: String, required: true },
+    startTime: { type: String, required: true },
+    startTime: { type: String, required: true },
     totalToken: { type: Number, required: true  },
     currentToken: { type: Number, required: true },
     tokenStatus: { type: Number, required: true },
     drStatus: { type: Boolean,required: true},
-  }, { timestamps: true });
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }
+}, { timestamps: true });
   
 module.exports = {
     DrConsultantModal: mongoose.model('DrConsultantModal', DrSchema),

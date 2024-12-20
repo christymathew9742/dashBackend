@@ -14,7 +14,7 @@ const generateAIResponse = async (prompt) => {
       if(!prompt) return null;
 
       try {
-          result = await model.generateContent(prompt);
+          result = await model.generateContent(prompt);//generateContentStream
           if (result) {
               return result.response.text();
           }

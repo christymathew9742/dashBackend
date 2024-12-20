@@ -1,7 +1,7 @@
 const { errorResponse } = require('../../utils/errorResponse');
 const {createDepartmentResponse} = require('../../services/departmentService/drDepartment')
 
-// Create createDepartmentData
+//create Department data
 const createDepartmentData = async (req, res, next) => {
     try {
         if (!req.user || !req.user.userId) {

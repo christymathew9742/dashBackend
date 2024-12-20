@@ -2,6 +2,7 @@ const express = require('express');
 const productRoutes = require('./routes/productRoutes'); 
 const authRoutes = require('./routes/authRoutes');
 const departmentRoute = require('./routes/deparmentRoute/departmentRoute')
+const chatBotRoute = require('./routes/chatBotRoute/chatBotRoute')
 const whatsappRoutes = require('./routes/whatsappRoutes/whatsappRoutes');
 const bodyParser = require('body-parser');
 
@@ -10,15 +11,28 @@ const connectDB = require('./config/db');
 require('dotenv').config();
 
 const app = express();
+
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 const cors = require('cors');
 
 app.use(cors({
     origin: 'http://localhost:3000',
-    methods: ['GET', 'POST',],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     credentials: true,
 }));
 
 connectDB();
+
+app.use('/api/auth', authRoutes);   
+app.use('/api/products', productRoutes);
+app.use('/api/department', departmentRoute),
+app.use('/api/createbot', chatBotRoute),
+app.use('/api/whatsapp', whatsappRoutes);
+app.use(bodyParser.json());
+app.use(errorHandler);
+
+module.exports = app;
 
 
 
@@ -167,12 +181,4 @@ connectDB();
 
 
 
-app.use(express.json());
-app.use('/api/auth', authRoutes);   
-app.use('/api/products', productRoutes);
-app.use('/api/department', departmentRoute),
-app.use('/api/whatsapp', whatsappRoutes);
-app.use(bodyParser.json());
-app.use(errorHandler);
-
-module.exports = app; 
+ 

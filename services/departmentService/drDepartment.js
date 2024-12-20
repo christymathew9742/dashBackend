@@ -5,9 +5,6 @@ const { errorResponse } = require('../../utils/errorResponse');
 const createDepartmentResponse = async (departmentData) => {
     console.log(departmentData,'dpdataaaa')
     try {
-        const departmentdb = await DepartmentModal.find();
-        console.log(departmentdb,'department collection')
-
         const department = new DepartmentModal(departmentData);
         if (!department) {
             throw errorResponse('Department not found', 404);
