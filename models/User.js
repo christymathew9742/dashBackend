@@ -5,16 +5,49 @@ const userSchema = new mongoose.Schema({
   username: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true},
-  confirmPassword: { type: String,required: true},
-  profileImage: { type: String },
-  additionalInfo: { type: String }
+  generateToken: { type: Boolean, default: false },
+  verifytoken: String,
+  phonenumberid:String,
+  accesstoken:String,
+  profilepick: {
+    originalName: {
+      type: String,
+    },
+    mimeType: {
+      type: String,
+    },
+    size: {
+      type: Number,
+    },
+    path: {
+      type: String,
+    },
+    filename: {
+      type: String,
+    },
+    fileUrl: {
+      type: String,
+    }
+  },
+  displayname: String,
+  country:String,
+  state:String,
+  phone: String,
+  postalcode:String,
+  bio: String,
+  facebook: String,
+  twitter: String,
+  linkedin: String,
+  instagram: String,
+  taxId:String,
+  role: { 
+    type: String, 
+    enum: ['user', 'admin', 'superadmin'], 
+    default: 'user', 
+  }
 }, { timestamps: true });
 
 userSchema.pre('save', function(next) {
-  if (this.password !== this.confirmPassword) {
-    return next(new Error('Passwords do not match'));
-  }
-
   this.password = bcrypt.hashSync(this.password, 10);
   this.confirmPassword = undefined;
   next();

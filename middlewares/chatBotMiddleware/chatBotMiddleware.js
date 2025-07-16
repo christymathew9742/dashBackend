@@ -13,9 +13,9 @@ const validateChatBot = [
     body('status')
         .notEmpty()
         .withMessage('Nodes is required'),
-    body('botnum')
-        .notEmpty()
-        .withMessage('Bot Number is required'),
+    // body('botnum')
+    //     .notEmpty()
+    //     .withMessage('Bot Number is required'),
     body('viewport')
         .notEmpty()
         .withMessage('Viewport is required')

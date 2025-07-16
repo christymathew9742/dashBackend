@@ -18,11 +18,21 @@ const createChatBot = async (req, res, next) => {
     }
 };
 
-// Get all chatBot for the authenticated user
+// // Get all chatBot for the authenticated user
+// const getAllChatBot = async (req, res, next) => {
+//     try {
+//         const chatBot = await chatBotService.getAllChatBot(req.user.userId);
+//         res.status(200).json({ success: true, data: chatBot });
+//     } catch (error) {
+//         next(error);
+//     }
+// };
+
 const getAllChatBot = async (req, res, next) => {
     try {
-        const chatBot = await chatBotService.getAllChatBot(req.user.userId);
-        res.status(200).json({ success: true, data: chatBot });
+        const { page, limit, search, status } = req.query;
+        const chatBots = await chatBotService.getAllChatBot(req.user.userId, page, limit, search, status);
+        res.status(200).json({ success: true, ...chatBots });
     } catch (error) {
         next(error);
     }

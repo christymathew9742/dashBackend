@@ -3,7 +3,7 @@ const { verifyWebhook, handleIncomingMessage } = require('../../controllers/what
 const authMiddleware = require('../../middlewares/authMiddleware');
 
 const router = express.Router();
-console.log(verifyWebhook,'verifyWebhook')
+
 router.get('/webhook', verifyWebhook);
 router.post('/webhook', handleIncomingMessage);
 

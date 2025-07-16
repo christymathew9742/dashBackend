@@ -4,6 +4,6 @@ const userMiddleware = require('../middlewares/authMiddleware');
 const upload = require('../utils/fileUpload');
 const router = express.Router();
 
-router.put('/update', userMiddleware, upload.single('profileImage'), updateUserProfile);
+router.put('/user', userMiddleware, upload.single('profileImage'), updateUserProfile);
 
 module.exports = router;

@@ -13,7 +13,7 @@ const authMiddleware = async (req, res, next) => {
         if (!user) {
             return res.status(404).json({ success: false, message: "User not found" });
         }
-        req.user = { userId: user._id };
+        req.user = { userId: user._id, role: user.role };
         next();
     } catch (error) {
         return res.status(401).json({ success: false, message: "Unauthorized" });
@@ -21,5 +21,6 @@ const authMiddleware = async (req, res, next) => {
 };
 
 module.exports = authMiddleware;
+
 
 

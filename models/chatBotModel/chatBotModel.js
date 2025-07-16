@@ -29,11 +29,11 @@ const ChatBotSchema = new mongoose.Schema({
     default: false,
     required: true,
   },
-  botnum: {
-    type: Number, 
-    default: 0,
-    required: true,
-  },
+  // botnum: {
+  //   type: Number, 
+  //   default: 0,
+  //   required: true,
+  // },
   update: {
     type: Boolean, 
     default: false,

@@ -2,11 +2,13 @@ const axios = require('axios');
 const fs = require("fs");
 const path = require('path');
 const { Client } = require('whatsapp-web.js');
-const VerifyToken = require('../../models/VerifyToken');
+const User = require('../../models/User');
 const vision = require('@google-cloud/vision');
+const jwt = require('jsonwebtoken');
 const { whatsappPhoneId, apiToken, webToken , baseUrl} = require('../../config/whatsappConfig');
 const handleConversation = require('../../services/whatsappService/whatsappService'); 
 const {processAudioWithAzureSTT, playTextToSpeech}  = require('../../ai/voiceAssistant/voiceAssistant');
+
 
 // const voicePath = path.resolve(__dirname, '../.././output.wav');
 // const voiceStream = fs.createReadStream(voicePath);
@@ -14,31 +16,57 @@ const {processAudioWithAzureSTT, playTextToSpeech}  = require('../../ai/voiceAss
 const verifyWebhook = async (req, res) => {
     const challenge = req.query['hub.challenge'];
     const webHooktoken = req.query['hub.verify_token'];
-    const isRecord = await VerifyToken.findOne({ verifyToken: webHooktoken });
+    const isRecord = await User.findOne({ verifytoken: webHooktoken });
+    
     if (isRecord) {
         res.status(200).send(challenge);
     } else {
-        res.status(403).send('Error, Please Verify Webhooks Token and URL');
+        res.status(403).send(result?.reason);
     }
 };
 
 const handleIncomingMessage = async (req, res) => {
+
     try {
-        const message = req?.body?.entry?.[0]?.changes?.[0]?.value;
+        const message = req?.body?.entry?.[0]?.changes?.[0]?.value || '';
+        const phoneNumberId = message?.metadata?.phone_number_id || '';
+        const botUser =  await User.findOne({ phonenumberid: phoneNumberId });
+        if (!botUser) return res.status(401).send('Unauthorized user');
 
-        if (!message?.messages?.[0]) return;
+        const botStatus = validateToken(botUser, process.env.JWT_SECRET);
 
+        if (!message?.messages?.[0] || !botStatus?.valid) return res.status(401).send('Invalid token');
+        
         const whatsapData = message?.messages?.[0];
         const { from: userPhone, type } = whatsapData;
+        const userId = botUser?._id || '';
         let { userData , aiResponce, audioMessage, imagedata } = {};
-        console.log(whatsapData,'whatsapData')
+
         switch (type) {
             case 'text':
                 userData = {
                     userPhone,
                     userInput:whatsapData?.text?.body,
+                    userOption:'',
+                    userId,
                 }
-                //aiResponce = await handleConversation(userData || null);
+                aiResponce = await handleConversation(userData || null);
+                break;
+            case 'button':
+                aiResponce = 'You selected a button option.';
+                break;
+            case 'interactive':
+                userData = {
+                    userPhone,
+                    userInput:'',
+                    userOption:whatsapData?.interactive?.list_reply?.id,
+                    userId,
+                }
+                if (whatsapData?.interactive?.type === 'button_reply') {
+                    aiResponce = `You selected: ${whatsapData?.interactive?.button_reply?.title}`;
+                } else if (whatsapData?.interactive?.type === 'list_reply') {
+                    aiResponce = await handleConversation(userData || null);
+                }
                 break;
             case 'audio':
                 userData = whatsapData?.audio?.id;
@@ -53,40 +81,131 @@ const handleIncomingMessage = async (req, res) => {
             default:
                 return res.status(400).send('Unsupported message type.');
         }
-
-       // await sendMessageToWhatsApp(userPhone, aiResponce);
-        res.status(200).send('Message received');
+        
+        await sendMessageToWhatsApp(userPhone, aiResponce, botUser);
+        res.status(200).send(botStatus?.reason);
     } catch (error) {
-        console.error('Error:', error.message);
-        res.status(500).send('Internal Server Error');
+        console.error('Error:', error?.message);
+        res.status(500).send('Internal server error');
     } 
 };
 
-const sendMessageToWhatsApp = async (phoneNumber, message) => {
+const validateToken = (user, secretKey) => {
+    const token = user?.verifytoken || '';
+    if (!token || !secretKey) {
+        return {
+            valid: false,
+            reason: 'Missing token or secret key',
+            decoded: null,
+        };
+    }
+
     try {
-        data = JSON.stringify({
-            messaging_product: 'whatsapp',
-            to: phoneNumber,
-            type: 'text',
-            text:{
-                body: message,
-            }
-        })
+        const decoded = jwt.verify(token, secretKey);
+        return {
+            valid: true,
+            reason: 'Valid token',
+            decoded,
+        };
+    } catch (err) {
+        return {
+            valid: false,
+            reason: err.name === 'TokenExpiredError' ? 'Token expired' : 'Invalid token',
+            decoded: null,
+        };
+    }
+};
+
+const sendMessageToWhatsApp = async (phoneNumber, aiResponce, botUser) => {
+    try {
+        let data;
+        const {resp, type, mainTitle = ""} = aiResponce;
+        if (type === "list") {
+            const rows = resp?.map(item => ({
+                id: item?._id.toString(),
+                title: item?.title,
+            }));
+            data = JSON.stringify({
+                messaging_product: 'whatsapp',
+                to: phoneNumber,
+                type: 'interactive',
+                interactive: {
+                    type: 'list',
+                    header: {
+                        type: 'text',
+                        text: 'Select an Option',
+                    },
+                    body: {
+                        text: mainTitle,
+                    },
+                    action: {
+                        button: 'Choose',
+                        sections: [
+                            {
+                                rows:rows,
+                            },
+                        ],
+                    },
+                },
+            });
+        } else if (type === "button") {
+            data = JSON.stringify({
+                messaging_product: "whatsapp",
+                to: phoneNumber,
+                type: "interactive",
+                interactive: {
+                    type: "button",
+                    header: {
+                        type: "text",
+                        text: "Choose an Option"
+                    },
+                    body: {
+                        text: "Select one of the options below:"
+                    },
+                    action: {
+                        buttons: options?.map((option, index) => ({
+                            type: "reply",
+                            reply: {
+                                id: `option_${index + 1}`,
+                                title: option.title
+                            }
+                        }))
+                    }
+                }
+            });
+        } else {
+            data = JSON.stringify({
+                messaging_product: "whatsapp",
+                to: phoneNumber,
+                type: "text",
+                text: {
+                    body: resp
+                }
+            });
+        }
 
         const config = {
             headers: {
-                Authorization: `Bearer ${apiToken}`,
-                'Content-Type': 'application/json',
-            },
+                Authorization: `Bearer ${botUser?.accesstoken}`,
+                "Content-Type": "application/json"
+            }
         };
-        const response = await axios.post(`${baseUrl}/${whatsappPhoneId}/messages`,data, config);
+
+        await axios.post(`${baseUrl}/${botUser?.phonenumberid}/messages`, data, config);
     } catch (error) {
-        console.error('Error sending WhatsApp message:', error);
+        data = JSON.stringify({
+            messaging_product: "whatsapp",
+            to: phoneNumber,
+            type: "text",
+            text: {
+                body: 'Give me a sec...'
+            }
+        });
+        console.error("Error sending WhatsApp message:", error.response?.data || error.message);
     }
 };
 
 const getMediaData = async (audiId) => {
-    console.log(audiId,'mediaId')
     try {
         const url = `${baseUrl}/${audiId}`;
         const response = await axios.get(url, {
@@ -122,9 +241,9 @@ const processAudioMessage = async (audiId) => {
                 return text;
             }
         }
-        //playTextToSpeech('halo i hop you are doin well i love you umma umma ')
-        //console.log(media,'mediamediamediamediamediamediamediamediamediamedia')
-        //processAudioWithAzureSTT(voiceStream);
+        // playTextToSpeech('halo i hop you are doin well i love you umma umma ')
+        // console.log(media,'mediamediamediamediamediamediamediamediamediamedia')
+        // processAudioWithAzureSTT(voiceStream);
 
     } catch (error) {
         console.error('Error processing audio message:', error.message);
@@ -141,7 +260,6 @@ const getImageUrl = async (mediaId) => {
             },
             responseType: 'arraybuffer'
         });
-        console.log(response.data,'img url')
         return response.data.url;
     } catch (error) {
         console.error('Error fetching image URL:', error.message);

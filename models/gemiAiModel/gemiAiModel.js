@@ -1,6 +1,4 @@
 const mongoose = require('mongoose');
-
-// AiModal Schema
 const AiSchema = new mongoose.Schema({
   dId:{type: mongoose.Schema.Types.ObjectId, required: true },
   name: { type: String, required: true },
@@ -17,6 +15,8 @@ const AiSchema = new mongoose.Schema({
 module.exports = {
   AiModal: mongoose.model('AiModal', AiSchema),
 };
+
+
 
 
 
