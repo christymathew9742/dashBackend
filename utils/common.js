@@ -102,8 +102,8 @@ function safeParseOptions(aiResponse) {
 const getValidationHint = (type, requiredFields = []) => {
     const baseText = `Mandatory: true\n  - Expected`;
     const hints = {
-        Text: `${baseText} Text only:\n - User Keywords: "name", "title", "location name", "reason", "text field"\n - Format: Only alphabets and common words (e.g., John Doe)\n - Error Message: "Please enter a valid [fieldName]"`,
-        Number: `${baseText} Numbers only:\n  - User Keywords: "age", "quantity", "amount", "duration", "count", "number of items"\n  - Format: Digits(Digits>= 0) only (e.g., 25)\n  - Error Message: "Please enter a valid [fieldName]"`,
+        Text: `${baseText} Text only:\n - User Keywords: "name(Only alphabets and common words)", "title", "location name", "reason", "text field"\n - Format: String (e.g., John Doe)\n - Error Message: "Please enter a valid [fieldName]"`,
+        Number: `${baseText} Numbers only:\n  - User Keywords: "age(ALLOW:1 to 100)", "quantity", "amount", "duration", "count", "number of items"\n  - Format: Numbers only (e.g., 25)\n  - Error Message: "Please enter a valid [fieldName]"`,
         Email: `${baseText} Email:\n  - User Keywords: "email", "mail", "email address"\n  - Format: Valid email (e.g., john@example.com)\n  - Error Message: "Please enter a valid email address like john@example.com."`,
         Phone: `${baseText} Phone:\n  - User Keywords: "phone", "mobile", "contact number"\n  - Format: 6-12-digit number (e.g., 9876543210)\n  - Error Message: "Please enter a valid phone number."`,
         Date: `${baseText} Date:\n  - User Keywords: "date", "appointment date", "birthdate", "meeting date"\n  - Format: YYYY-MM-DD (e.g., 2025-07-10)\n  - Error Message: "Please enter a valid date in YYYY-MM-DD format."`,

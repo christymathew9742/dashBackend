@@ -131,10 +131,10 @@ const sendMessageToWhatsApp = async (phoneNumber, aiResponce, botUser) => {
                 type: 'interactive',
                 interactive: {
                     type: 'list',
-                    header: {
-                        type: 'text',
-                        text: 'Select an Option',
-                    },
+                    // header: {
+                    //     type: 'text',
+                    //     text: 'Select an Option',
+                    // },
                     body: {
                         text: mainTitle,
                     },

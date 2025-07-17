@@ -94,7 +94,7 @@ const generateDynamicPrompt = async (
             Use the following list to match consultant-selected preference option IDs:
             ${preferenceOptionsStr}
         ` : ''}
-
+        
         - **Mandatory: Collect all consultent selected Preference Options(id) from conversation history, create an array and pass as value of Preference [Eg: preference:[op1,op2,op3, etc..]]**
         - **Mandatory: Build a JavaScript object where each required field becomes a key, and the corresponding user input becomes its value, ✅ This object must be included in the conversation history together with the final message of AI in Json format.**
     `.trim();

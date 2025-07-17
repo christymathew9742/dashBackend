@@ -15,6 +15,10 @@ const AppointmentSchema = new Schema({
         type: String,
         required: true  
     },
+    status: {
+        type: String,
+        required: true  
+    },
     data: {
         type: Map,
         of: Schema.Types.Mixed,
